@@ -5,7 +5,7 @@
 
 ### 進め方
 ---
-#### 1. 企画とゴール設定
+#### 1. 企画とゴール設定 ← イマココ
   - ペルソナの設定とユーザーにどうなってもらいたいか
   - 要件定義 - 必須機能以外のオプション機能を決める
 
@@ -47,6 +47,7 @@
 ### データの流れ - ストックとフローを意識すること
 
 
-参考文献等
+引用・参考文献等
+- [TechTrain](https://techbowl.co.jp/techtrain) Mission powered by サイボウズ株式会社
 - [Webディレクションの新標準ルール](https://www.amazon.co.jp/dp/B06WRWPF1P/) - MdN出版
 - [Webデザイナーのキャリアを未経験からスタートするためのオールインワン講座](https://www.udemy.com/course/web-designer/) - 作成者 Shunsuke Sawada
