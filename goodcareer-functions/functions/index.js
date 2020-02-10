@@ -5,7 +5,7 @@ const app = require('express')();
 const FBAuth = require('./util/fbAuth');
 
 const { getAllCompanies, postOneCompany } = require('./handlers/companies')
-const { signup, login } = require('./handlers/users')
+const { signup, login, uploadImage } = require('./handlers/users')
 
 
 app.get('/companies', getAllCompanies)
@@ -16,5 +16,7 @@ app.post('/signup', signup);
 
 // Login
 app.post('/login', login);
+
+app.post('/user/image', uploadImage)
 
 exports.api = functions.region('asia-northeast1').https.onRequest(app);

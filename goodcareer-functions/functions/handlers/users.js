@@ -1,4 +1,4 @@
-const { db } = require('../util/admin');
+const { admin, db } = require('../util/admin');
 
 const config = require('../util/config');
 
@@ -82,14 +82,16 @@ exports.login = (req, res) => {
     })
 }
 
-exports.validateLoginData = (data) => {
-  let errors = {};
+exports.uploadImage = (req, res) => {
+  const BusBoy = require('busboy');
+  const path = require('path');
+  const os = require('os');
+  const fs = require('fs');
 
-  if(isEmpty(user.email)) errors.email = 'Must not be empty';
-  if(isEmpty(user.password)) errors.password = 'Must not be empty';
+  const busboy = new BusBoy({ headers: req.headers });
 
-  return {
-    errors,
-    valid: Object.keys(errors).length === 0 ? true : false
-  }
+  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    const imageExtension = filename.split('.')[filename.split('.').length - 1];
+    const imageFileName = `${Math.round(Math.random()*10000000000)}.${imageExtension}`;
+  })
 }
