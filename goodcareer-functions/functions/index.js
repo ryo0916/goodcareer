@@ -17,6 +17,6 @@ app.post('/signup', signup);
 // Login
 app.post('/login', login);
 
-app.post('/user/image', uploadImage)
+app.post('/user/image', FBAuth, uploadImage)
 
 exports.api = functions.region('asia-northeast1').https.onRequest(app);
