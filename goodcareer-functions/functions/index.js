@@ -7,16 +7,16 @@ const FBAuth = require('./util/fbAuth');
 const { getAllCompanies, postOneCompany } = require('./handlers/companies')
 const { signup, login, uploadImage } = require('./handlers/users')
 
-
 app.get('/companies', getAllCompanies)
 app.post('/company', FBAuth, postOneCompany);
 
-// SIGNUP route
+// SIGNUP ROUTE
 app.post('/signup', signup);
 
-// Login
+// LOGIN ROUTE
 app.post('/login', login);
 
+// UPLOAD IMAGE ROUTE
 app.post('/user/image', FBAuth, uploadImage)
 
 exports.api = functions.region('asia-northeast1').https.onRequest(app);
