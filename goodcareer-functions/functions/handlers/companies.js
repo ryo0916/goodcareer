@@ -73,7 +73,7 @@ exports.getCompany = (req, res) => {
 };
 
 exports.commentOnCompany = (req, res) => {
-  if(req.body.body.trim() === '') return res.status(400).json({ error: 'Must not be empty' });
+  if(req.body.body.trim() === '') return res.status(400).json({ comment: 'Must not be empty' });
 
   const newComment = {
     body: req.body.body,
@@ -128,7 +128,7 @@ exports.likeCompany = (req, res) => {
           userHandle: req.user.handle
         })
         .then(() => {
-          companyData.likeCount++
+          companyData.likeCount++;
           return companyDocument.update({ likeCount: companyData.likeCount});
         })
         .then(() => {
