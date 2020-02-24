@@ -5,8 +5,9 @@ const config = require('../util/config');
 const firebase = require('firebase');
 firebase.initializeApp(config);
 
-const { validateSignupData, validateLoginData } = require('../util/validators');
+const { validateSignupData, validateLoginData, reduceUserDetails } = require('../util/validators');
 
+// Signup
 exports.signup = (req, res) => {
   const newUser = {
     email: req.body.email,
@@ -53,11 +54,12 @@ exports.signup = (req, res) => {
       if(err.code === 'auth/email-already-in-use'){
         return res.status(400).json({email: 'Email is already in use'})
       } else {
-        return res.status(500).json({ error: err.code })
+        return res.status(500).json({ general: 'Something went wrong, please try again' })
       }
     })
 }
 
+// Login
 exports.login = (req, res) => {
   const user = {
     email: req.body.email,
@@ -77,6 +79,8 @@ exports.login = (req, res) => {
     })
     .catch(err => {
       console.error(err);
+      // auth/wrong-password
+      // auth/user-not-found でもおｋ3:59:55
       if (err.code === 'auth/wrong-password') {
         return res.status(403).json({ general: 'Wrong credentials, please try again'});
       }
@@ -84,6 +88,95 @@ exports.login = (req, res) => {
     })
 }
 
+// Add user details
+exports.addUserDetails = (req, res) => {
+  let userDatails = reduceUserDetails(req.body);
+
+  db.doc(`/users/${req.user.handle}`).update(userDatails)
+    .then(() => {
+      return res.json({ message: 'Details added successfully'});
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({error: err.code})
+    })
+}
+
+// Get any user's details
+exports.getUserDetails = (req, res) => {
+  let userData = {};
+  db.doc(`/users/${req.params.handle}`).get()
+    .then(doc => {
+      if(doc.exists){
+        userData.user = doc.data();
+        return db.collection('companies').where('userHandle', '==', req.params.handle)
+          .orderBy('createdAt', 'desc')
+          .get();
+      } else {
+        return res.status(404).json({error: 'User not found'});
+      }
+    })
+    .then(data => {
+      userData.companies = [];
+      data.forEach(doc => {
+        userData.companies.push({
+          body: doc.data().body,
+          createdAt: doc.data().createdAt,
+          userHandle: doc.data().userHandle,
+          userImage: doc.data().userImage,
+          likeCount: doc.data().likeCount,
+          commentCount: doc.data().commentCount,
+          companyId: doc.id
+        })
+      });
+      return res.json(userData);
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    })
+}
+
+// Get own user details
+exports.getAuthenticatedUser = (req, res) => {
+  let userData = {};
+  db.doc(`/users/${req.user.handle}`).get()
+    .then(doc => {
+      if(doc.exists){
+        userData.credentials = doc.data();
+        return db.collection('likes').where('userHandle', '==', req.user.handle).get()
+      }
+    })
+    .then(data => {
+      userData.likes = [];
+      data.forEach(doc => {
+        userData.likes.push(doc.data());
+      });
+      return db.collection('notifications').where('recipient', '==', req.user.handle)
+        .orderBy('createdAt', 'desc').limit(10).get();
+    })
+    .then(data => {
+      userData.notification = [];
+      data.forEach(doc => {
+        userData.notifications.push({
+          recipient: doc.data().recipient,
+          sender: doc.data().sender,
+          createdAt: doc.data().createdAt,
+          companyId: doc.data().companyId,
+          type: doc.data().type,
+          read: doc.data().read,
+          notificationId: doc.id
+        });
+      });
+      return res.json(userData);
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
+
+// Up user's profile image
 exports.uploadImage = (req, res) => {
   const BusBoy = require('busboy');
   const path = require('path');
@@ -96,9 +189,9 @@ exports.uploadImage = (req, res) => {
   let imageToBeUploaded = {};
 
   busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-    console.log(fieldname);
-    console.log(filename);
-    console.log(mimetype);
+    if(minetype !== 'image/jpeg' && minetype !== 'image/png') {
+      return res.status(400).json({ error: 'Wrong file type submitted' });
+    }
 
     const imageExtension = filename.split('.')[filename.split('.').length - 1];
     imageFileName = `${Math.round(Math.random()*10000000000)}.${imageExtension}`;
@@ -128,4 +221,20 @@ exports.uploadImage = (req, res) => {
     });
   });
   busboy.end(req.rawBody);
+}
+
+exports.markNotifications = (req, res) => {
+  let batch = db.batch();
+  req.body.forEach(notificationId => {
+    const notification = db.doc(`/notifications/${notificationId}`)
+    batch.update(notification, { read: true });
+  });
+  batch.commit()
+    .then(() => {
+      return res.json({ message: 'Notifications marked read'});
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({ error: err.code});
+    });
 }
